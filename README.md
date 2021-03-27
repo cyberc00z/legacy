@@ -6,4 +6,4 @@
 4. Library
 5. Protection
 6. Banker's Algorithm Simulation Operating System(Safe Sq, Resource Request Algo) 
-
+7. Cyber Managment
