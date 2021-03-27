@@ -1,0 +1,3 @@
+REN  ./a.txt
+.{xxxxxxx}
+exit
