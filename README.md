@@ -1,4 +1,4 @@
-## Solution for CodeWithC[https://www.codewithcode.com/] program in C 
+## Solution for CodeWithC[https://www.codewithc.com/] program in C 
 
 1. Billing System
 2. Managment System
