@@ -7,3 +7,5 @@
 5. Protection
 6. Banker's Algorithm Simulation Operating System(Safe Sq, Resource Request Algo) 
 7. Cyber Managment
+8. Who wanna be Millionare
+9. Dairy
