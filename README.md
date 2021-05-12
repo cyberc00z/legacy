@@ -1,17 +1,38 @@
 ###  C Programs
 
-1. Billing System
+1. Billing System ["https://github.com/xadhrit/legacy/tree/main/bank"]
 
-2. Managment System
-3. Stack Operation
-4. Library
-5. Protection
+2. Managment System ["https://github.com/xadhrit/legacy/tree/main/management"]
+
+3. Stack Operation ["https://github.com/xadhrit/legacy/tree/main/stack"]
+
+4. Library  ["https://github.com/xadhrit/legacy/tree/main/Library"]
+
+5. Protection ["https://github.com/xadhrit/legacy/tree/main/Protection"]
+
 6. Banker's Algorithm Simulation Operating System(Safe Sq, Resource Request Algo) 
-7. Cyber Managment
-8. Who wanna be Millionare
-9. Dairy
-10. Monte
-11. Virus
-12. Conversion infix_posix
-13. Ticket Booking
-14. Interpreter
+  ["https://github.com/xadhrit/legacy/tree/main/banker_simulation"]
+
+7. Cyber Managment ["https://github.com/xadhrit/legacy/tree/main/Cyber-Management"]
+
+8. Who wanna be Millionare ["https://github.com/xadhrit/legacy/tree/main/game"]
+
+9. Dairy ["https://github.com/xadhrit/legacy/tree/main/Dairy"]
+
+10. Monte ["https://github.com/xadhrit/legacy/tree/main/monte"]
+
+11. Virus ["https://github.com/xadhrit/legacy/tree/main/virus"]
+
+12. Conversion infix_posix ["https://github.com/xadhrit/legacy/tree/main/virus"]
+
+13. Ticket Booking ["https://github.com/xadhrit/legacy/tree/main/ticketing_sys"]
+
+14. Interpreter ["https://github.com/xadhrit/legacy/tree/main/inter"]
+
+### Python Programs
+
+1. IP lookup ["https://github.com/xadhrit/8IP"]
+
+2. Pdf and Text File Translator ["https://github.com/xadhrit/trans"]
+
+
