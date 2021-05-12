@@ -1,6 +1,6 @@
 ###  C Programs
 
-1. Billing System ["https://github.com/xadhrit/legacy/tree/main/bank"]
+1. Billing System (https://github.com/xadhrit/legacy/tree/main/bank)
 
 2. Managment System ["https://github.com/xadhrit/legacy/tree/main/management"]
 
