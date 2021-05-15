@@ -1,9 +1,7 @@
-Write a simple python script for collecting all your key logs.
+#### Write a simple python script for collecting all your key logs.
 
 
 ### Usage
- nohup python3 keylogger.py & command, it'll start to log your strokes: The meaning of nohup is ‘no hangup‘. When nohup command use with ‘&’ then it doesn’t return to shell command prompt after running the command in the background.
-
 
 Start logger
 ```
