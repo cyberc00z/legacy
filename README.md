@@ -1,5 +1,9 @@
 ###  C Programs
 
+<p align="center">
+<img src="./virus/c.jpg" height="280px" width="400"  alt="C" />
+</p>
+
 1. Billing System (https://github.com/xadhrit/legacy/tree/main/bank)
 
 2. Managment System  (https://github.com/xadhrit/legacy/tree/main/management)
