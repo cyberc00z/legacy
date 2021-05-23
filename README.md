@@ -35,6 +35,9 @@
 
 15. Simple Bootloader (https://github.com/xadhrit/legacy/tree/main/bootloader)
 
+16. Write a C compiler (https://github.com/xadhrit/legacy/tree/main/compiler)
+
+
 ### Python Programs
 
 1. IP lookup (https://github.com/xadhrit/8IP)
