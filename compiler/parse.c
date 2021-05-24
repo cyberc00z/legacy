@@ -2078,7 +2078,7 @@ static Type *read_declarator_array(Type *basety){
     Token *tok = peek();
     Type *t = read_declarator_tail(basety, NULL);
     if (t->kind == KIND_FUNC){
-        errort(tok, "array of function")
+        errort(tok, "array of function : %s", t->kind);
     }
     return make_array_type(t, len);
 }
@@ -2136,6 +2136,858 @@ static Type *read_declarator(char **rname, Type *basety, Vector *params, int ctx
     unget_token(tok);
     return read_declarator_tail(basety, params);
 }
+
+static Type *read_abstract_declarator(Type *basety){
+    return read_declarator(NULL, basety, NULL, DECL_CAST);
+}
+
+
+// typeof
+static Type *read_typeof(){
+    expect('(');
+    Type *r = is_type(peek())
+        ? read_cast_type()
+        : read_comma_expr()->ty;
+    expect(')');
+    return r;
+}
+
+// Declaration specifier
+
+static bool is_poweroftwo(int x){
+    // if there's only one bit set in x,  the value is a power of 2
+    return (x <= 0) ? false : !(x & (x-1));
+    
+}
+
+static int read_aligns(){
+    expect('(');
+    int r = is_type(peek())
+        ? read_case_type()->align
+        : read_intexpr();
+    expect(')');
+    return r;
+}
+
+static Type *read_decl_spec(int *rsclass){
+    int sclass = 0;
+    Token *tok = peek();
+    if (!is_type(tok)){
+        errort(tok, "type name expected , but got %s", tok2s(tok));
+    }
+    Type *usertype = NULL;
+    enum {kvoid  =1, kbool,kchar, kint, kfloat, kdouble} kind = 0;
+    enum {kshort = 1, klong, kllong} size = 0;
+    enum {ksigned =1 , kunsigned } sig = 0;
+    int align = -1;
+
+    for (;;){
+        tok = get();
+        if (tok->kind ==EOF){
+            error("permature end of input");
+        }
+        if (kind == 0 && tok-kind == TIDENT && !usertype){
+            Type *def = get_typedef(tok->sval);
+            if (def){
+                if (usertype) goto err;
+                usertype = def;
+                goto errcheck;
+         
+            }
+        }
+        if (tok->kind != TKEYWORD){
+            unget_token(tok);
+            break;
+        }
+        switch (tok->id)
+        {
+        case KTYPEDEF: if (sclass) goto err; sclass = S_TYPEDEF; break;
+        case KEXTERN: if (sclass) goto err; sclass = S_EXTERN; break;
+        case KSTATIC : if (sclass) goto err; sclass = S_STATIC; break;
+        case  KAUTO: if (sclass) goto err; sclass = S_AUTO; break;
+        case KREGISTER: if (sclass) goto err; sclass = S_REGISTER; break;
+        case KCONST: break;
+        case KVOLATILE: break;
+        case KINLINE : break;
+        case KNORETURN: break;
+        case KVOID: if (kind) goto err; kind = kvoid; break;
+        case KINT: if (kind) goto err; kind = kint; break;
+        case KBOOL: if (kind) goto err; kind = kbool ; break;
+        case KFLOAT: if (kind) goto err; kind =kfloat; break;
+        case KCHAR: if (kind) goto err; kind = kchar; break;
+        case KDOUBLE: if (kind) goto err; kind = kdouble; break;
+        case KSIGNED: if (sig) goto err; sig = ksigned; break;
+        case KUNSIGNED: if (sig) goto err; sig =kunsigned ; break;
+        case KSHORT: if (size) goto err; kind = kshort; break;
+        case KSTRUCT: if (usertype) goto err; usertype = read_struct_def(); break;
+        case KUNION: if (usertype) goto err; usertype = read_union_def(); break;
+        case KENUM: if (usertype) goto err; usertype = read_enum_def(); break;
+        case KALIGNAS : {
+            int val = read_alignas();
+            if (val < 0){
+                errort(tok, "negative alignment: %d", val);
+            }
+            if (val == 0){
+                break;
+            }
+            if (align == -1 || val < align){
+                align = val;
+            }
+            break;
+
+        }
+        case KLONG: {
+            if (size==0) size = klong;
+            else if (size == klong) size=klong;
+            else goto err;
+            break; 
+        }
+        case KTYPEOF:{
+            if (usertype) goto err;
+            usertype  =read_typeof();
+            break;
+
+        }
+        default:
+            unget_token(tok);
+            goto done;
+        }
+        errcheck:
+            if (kind == kbool && (size != 0 && sig != 0)){
+               goto err;
+            }
+            if (size == kshort && (kind != 0 && kind != kint)){
+                goto err;
+            }
+            if (size == klong && (kind !=0 && kind != kint && kind != kdouble)){
+                goto err;
+            }
+            if (sig != 0 && (kind == kvoid || kind == kfloat || kind == kdouble)){
+                goto err;
+            }
+            if (usertype && (kind != 0 || size != 0 || sig != 0)){
+                goto err;
+            }
+
+    }
+    done:
+        if (rsclass){
+            *rsclass  = sclass;
+        }
+        if (usertype){
+            return usertype;
+        }
+        if (align != -1 && !is_poweroftwo(align)){
+            errort(tok, "aligment must be power of 2 , but got %d", align);
+        }
+        Type *ty;
+        switch (kind){
+        case kvoid:   ty = type_void; goto end;
+        case kbool: ty=make_numtype(KIND_BOOL, false); goto end;
+        case kchar: ty=make_numtype(KIND_CHAR, sig==kunsigned); goto end;
+        case kfloat: ty=make_numtype(KIND_FLOAT, false); goto end; 
+        case kdouble: ty= make_numtype(size == klong ? KIND_LDOUBLE : KIND_DOUBLE , false); goto end;
+        default: break;
+        }
+        switch (size){
+            case kshort: ty = make_numtype(KIND_SHORT, sig == kunsigned); goto end;
+            case klong: ty=make_numtype(KIND_LONG, sig==kunsigned); goto end;
+            case kllong: ty= make_numtype(KIND_LLONG, sig== kunsigned); goto end;
+            default:  ty = make_numtype(KIND_INT, sig== kunsigned); goto end;
+        }
+        error("internal error: kind: %d, size : %d ", kind, size);
+    end:
+        if (align != -1){
+            ty->align = align;
+        }
+        return ty;
+    
+    err:
+       errort(tok, "type mismatch : %s", tok2s(tok)) ;
+}
+
+static void read_static_local_var(Type *ty, char *name){
+    Node *var = ast_static_lvar(ty, name);
+    Vector *init = NULL;
+    if (next_token('=')){
+        Map *orig = localenv;
+        localenv = NULL;
+        init = read_decl_init(ty);
+        localenv = orig;
+    }
+    vec_push(toplevels, ast_decl(var, init));
+}
+
+
+static Type *read_decl_spec_opt(int *sclass){
+    if (is_type(peek())){
+        return read_decl_spec(sclass);
+    }
+    warnt(peek(), "type specifier missing, assuming int");
+    return type_int;
+}
+
+static void read_decl(Vector *block, bool isglobal){
+    int sclass = 0;
+    Type *basetype = read_decl_spec_opt(&sclass);
+    if (next_token(';')){
+        return;
+    }
+    for (;;){
+        char *name = NULL;
+        Type *ty = read_declarator(&name, copy_incomplete_type(basetype), NULL, DECL_BODY);
+        ty->isstatic = (sclass == S_STATIC);
+        if (sclass = S_TYPEDEF){
+            ast_typedef(ty, name);
+        }
+        else if (ty->isstatic && !isglobal){
+            ensure_not_void(ty);
+            read_static_local_var(ty, name);
+        }
+        else {
+            ensure_not_valid(ty);
+            Node *var = (isglobal ? ast_gvar : ast_lvar)(ty, name);
+            if (next_token('=')){
+                vec_push(block, ast_decl(var, read_decl_init(ty)));
+            }
+            else if (sclass != S_EXTERN && ty->kind != KIND_FUNC){
+                vec_push(block, ast_decl(var, NULL));
+            }
+        }
+        if (next_token(';'))
+            return;
+        
+        if (!next_token(',')){
+            errort(peek(), "';' or ',' are expected , but got %s",tok2s(peek()));
+        }
+    }
+}
+
+static Vector *read_oldstyle_param_args(){
+    Map *orig  =localenv;
+    localenv = NULL;
+    Vector *r = make_vector();
+    for (;;){
+        if (is_keyword(peek(), '{')){
+            break;
+        }
+        if (!is_type(peek())){
+            errort(peek(),"K&R-style declarator expected, but got %s", tok2s(peek()));
+
+        }
+        read_decl(r, false);
+    }
+    localenv = orig;
+    return r;
+}
+
+static void update_odlstyle_param_type(Vector *params, Vector *vars){
+    for (int i=0;i<vec_len(vars); i++){
+        Node *decl = vec_get(vars,i );
+        assert(decl->kind == AST_DECL);
+        Node *var = decl->declvar;
+        assert(var->kind == AST_LVAR);
+        for (int j = 0; j<vec_len(params); j++){
+            Node *param = vec_get(params,j);
+            assert(param->kind == AST_LVAR);
+            if (strcmp(param->varname, var->varname)){
+                continue;
+            }
+            param->ty = var->ty;
+            goto found;          
+        }
+        error("missing parameter : %s", var->varname);
+        found:;       
+    }
+}
+
+static void read_oldstyle_param_type(Vector *params){
+    Vector *vars = read_oldstyle_param_args();
+    update_odlstyle_param_type(params, vars);
+}
+
+static Vector *param_types(Vector *params){
+    Vector *r = make_vector();
+    for (int i=0; i<vec_len(params); i++){
+        Node *param = vec_get(params, i);
+        vec_push(r, param->ty);
+    }
+    return r;
+}
+
+
+// function definition
+static Node *read_func_body(Type *functype, char *fname, Vector *params){
+    localenv = make_map_parent(localenv);
+    localvars = make_vector();
+    current_func_type = functype;
+    Node *funcname = ast_string(ENC_NONE, fname, strlen(fname) + 1);
+    map_out(localenv, "__func__", funcname);
+    map_out(localenv, "__FUNCTION__", funcname); 
+    Node *body=  read_compound_stmt();
+    Node *r = ast_func(functype,fname, params, body, localvars);
+    current_func_type = NULL;
+    localenv = NULL;
+    localvars = NULL;
+    return r;
+}
+
+static void skip_parentheses(Vector *buf){
+    for (;;){
+        Token *tok = get();
+        if (tok->kind == TEOF){
+            error("premature end of input");
+
+        }
+        vec_push(buf, tok);
+        if (is_keyword(tok, ")")){
+            return;
+        }
+        if (is_keyword(tok, "(")){
+            skip_parentheses(buf);
+        }
+    }
+}
+
+static bool is_funcdef(){
+    Vector *buf = make_vector();
+    bool r = false;
+    for (;;){
+        Token *tok = get();
+        vec_push(buf, tok);
+        if (tok->kind == TEOF){
+            error("premature end of input");
+        }
+        if (is_keyword(tok, ";")){
+            break;
+        }
+        if (is_type(tok)){
+            continue;
+        }
+        if (is_keyword(tok, "(")){
+            skip_parentheses(buf);
+            continue;
+        }
+        if (tok->kind != TIDENT){
+            continue;
+        }
+        if (!is_keyword(peek(), '(')){
+            continue;
+        }
+        vec_push(buf, gt());
+        skip_parentheses(buf);
+        r = (is_keyword(peek(), '{') || is_type(peek()));
+        break;
+    }
+    while (vec_len(buf)> 0){
+        unget_token(vec_pop(buf));
+    }
+    return r;
+}
+
+static void backfill_labels(){
+    for (int i=0; i<vec_len(gotos); i++){
+        Node *src = vec_get(gotos, i);
+        char *label = src->label;
+        Node *dst = map_get(labels, label);
+        if (!dst){
+            error("stray %s: %s", src->kind == AST_GOTO ? "goto": "unary &&", label);
+
+        }
+        if (dst->newlabel){
+            src->newlabel = dst->newlabel;
+        }
+        else {
+            src->newlabel =dst->newlabel = make_label();
+        }
+    }
+}
+
+static Node *read_funcdef(){
+    int sclass = 0;
+    Type *basetype = read_decl_spec_opt(&sclass);
+    localenv = make_map_parent(globalenv);
+    gotos = make_vector();
+    labels = make_map();
+    char *name;
+    Vector *params = make_vector();
+    Type *functype = read_declarator(&name, basetype,params, DECL_BODY);
+    if (functype->oldstyle){
+        if (vec_len(params) == 0){
+            functype->hasva = false;
+
+        }
+        read_oldstyle_param_type(params);
+        functype->params = param_type(params);
+    }
+    functype->isstatic = (sclass == S_STATIC);
+    ast_gvar(functype, name);
+    expect('{');
+    Node *r = read_func_body(functype, name, params);
+    backfill_labels();
+    localenv = NULL;
+    return r;
+}
+
+static Node *read_boolean_expr(){
+    Node *cond = read_expr();
+    return is_flotype(cond->ty) ? ast_conv(type_bool, cond) : cond;
+}
+
+static Node *read_if_stmt(){
+    expect('(');
+    Node *cond = read_boolean_expr();
+    expect(')');
+    Node *then  = read_stmt();
+    if (!next_token(KELSE)){
+        return ast_if(cond, then, NULL);
+    }
+    Node *els = read_stmt();
+    return ast_if(cond, then, els);
+}
+
+static Node *read_opt_decl_or_stmt(){
+    if (next_token(';')){
+        Vector *list = make_vector();
+        read_decl_or_stmt(list);
+        return ast_compound_stmt(list);
+    }
+}
+
+
+#define SET_JUMP_LABELS(cont, brk)   \
+    char *ocontinue = lcontinue;     \
+    char *obreak = lbreak;           \  
+    lcontinue = cont;                \
+    lbreak = brk;                    \   
+
+#define RESTORE_JUMP_LABELS()        \      
+    lcontinue = ocontinue;           \
+    lbreak = obreak;                 \
+
+static Node *read_for_stmt(){
+    expect('(');
+    char *beg = make_label();
+    char *mid = make_label();
+    char *end = make_label();
+    Map *orig = localenv;
+    localenv = make_map_parent(localenv);
+    Node *init = read_opt_decl_or_stmt();
+    Node *cond = read_expr_opt();
+    if (cond && is_flotype(cond->ty)){
+        cond = ast_conv(type_bool, cond);
+    }
+    expect(';');
+    Node *step = read_expr_opt();
+    expect(')');
+    SET_JUMP_LABELS(mid, end);
+    Node *body = read_stmt();
+    RESTORE_JUMP_LABELS();
+    localenv = orig;
+
+
+    Vector *v = make_vector();
+    if (init){
+        vec_push(v, init);
+    }
+    vec_push(v, ast_dest(beg));
+    if (cond){
+        vec_push(v,ast_if(cond, NULL, ast_jump(end)));
+
+    }
+    if (body){
+        vec_push(v, body);
+    }
+    vec_push(v, ast_dest(mid));
+    
+    if (step){
+        vec_push(v, step);
+    }
+    vec_push(v, ast_jump(beg));
+    vec_push(v, ast_dest(end));
+    return ast_compound_stmt(v);
+}
+
+static Node *read_while_stmt(){
+    expect('(');
+    Node *cond = read_boolean_expr();
+    expect(')');
+
+    char *beg = make_label();
+    char *end = make_label();
+    SET_JUMP_LABELS(beg, end);
+    Node *body = read_stmt();
+    RESTORE_JUMP_LABELS();
+
+    Vector *v = make_vector();
+    vec_push(v, ast_dest(beg));
+    vec_push(v, ast_if(cond, body, ast_jump(end)));
+    vec_push(v, ast_jump(beg));
+    vec_push(v, ast_dest(end));
+    return ast_compound_stmt(v);
+}
+
+
+// Do
+
+
+static Node *read_do_stmt(){
+    char *beg = make_label();
+    char *end = make_label();
+    SET_JUMP_LABELS(beg, end);
+    Node *body = read_stmt();
+    RESTORE_JUMP_LABELS();
+    Token *tok = get();
+    if (!is_keyword(tok, KWHILE)){
+        errort(tok, "'while' is expected , but got %s", tok2s(tok));
+    }
+    expect('(');
+    Node *cond = read_boolean_expr();
+    expect(')');
+    expect(';');
+
+    Vector *v = make_vector();
+    vec_push(v, ast_dest(beg));
+    if (body){
+        vec_push(v, body);
+    }
+    vec_push(v, ast_if(cond, ast_jump(beg), NULL));
+    vec_push(v, ast_dest(end));
+    return ast_compound_stmt(v);
+}
+
+// Switch
+
+static Node *make_switch_jump(Node *var, Case *c){
+    Node *cond;
+    if (c->beg == c->end){
+        cond = ast_binop(type_int, OP_EQ, var, ast_inttype(type_int, c->beg));
+    }
+    else {
+        Node *x = ast_binop(type_int, OP_LE, ast_inttype(type_int, c->beg), var);
+        Node *y = ast_binop(type_int, OP_LE, var, ast_inttype(type_int, c->beg));
+        cond = ast_binop(type_int, OP_LOGAND, x, y);
+
+    }
+    return ast_if(cond, ast_jump(c->label), NULL);
+}
+
+static void check_case_duplicates(Vector *cases){
+    int len = vec_len(cases);
+    Case *x = vec_get(cases, len -1);
+    for (int  i=0; i<len-1;i++){
+        Case *y = vec_get(cases, i);
+        if (x->end < y->beg || y->end < x->beg){
+            continue;
+        }
+        if (x->beg == x->end){
+            error("duplicate case value : %d", x->beg);
+        }
+        error("duplicate case value: %d ... %d", x->beg, x->end);
+    }
+}
+
+#define SET_SWITCH_CONTEXT(brk)         \
+    Vector *ocases = cases;             \   
+    char *odefaultcase = defaultcase;   \
+    char *obreak = lbreak               \
+    cases = make_vector();              \
+    defaultcase =NULL;                  \ 
+    lbreak = brk;                              
+
+#define RESTORE_SWITCH_CONTEXT()        \
+    cases = oscases;                    \     
+    defaultcase = odefaultcase;         \
+    lbreak = obreak; 
+
+static Node *read_switch_stmt(){
+    expect('(');
+    Node *expr = conv(read_expr());
+    ensure_inttype(expr);
+    expect(')');
+
+    char *end = make_label();
+    SET_SWITCH_CONTEXT(end);
+    Node *body = read_stmt();
+    Vector *v  = make_vector();
+    Node *var = ast_lvar(expr->ty, make_tempname());
+    vec_push(v, ast_binop(expr->ty,'=', var, expr));
+    for (int i = 0; i<vec_len(cases); i++){
+        vec_push(v, make_switch_jump(var, vec_get(cases, i)));
+    }
+    vec_push(v, ast_jump(defaultcase ? defaultcase : end));
+    if (body){
+        vec_push(v, ast_dest(end));
+    }
+    vec_push(v, ast_dest(end));
+    RESTORE_SWITCH_CONTEXT();
+    return ast_compound_stmt(v)
+}
+
+static Node *read_switch_stmt(){
+    expect('(');
+    Node *expr = conv(read_expr());
+    ensure_inttype(expr);
+    expect(')');
+
+    char *end = make_label();
+    SET_SWITCH_CONTEXT(end);
+    Node *body = read_stmt();
+    Vector *v = make_vector();
+    Node *var = ast_lvar(expr->ty, make_tempname());
+    vec_push(v, ast_binop(expr->ty, '=', var, expr));
+    for (int i = 0 ; i<vec_len(cases); i++){
+        vec_push(v, make_switch_jump(var, vec_get(cases, i)));
+    }
+    vec_push(v, ast_jump(defaultcase ?  defaultcase : end));
+    if (body){
+        vec_push(v, body);
+    }
+    vec_push(v, ast_dest(end));
+    RESTORE_SWITCH_CONTEXT();
+    return ast_compound_stmt(v);
+}
+
+static Node *read_label_tail(Node *label){
+    Node *stmt = read_stmt();
+    Vector *v = make_vector();
+    vec_push(v, label);
+    if (stmt){
+        vec_push(v, stmt);
+    }
+    return ast_compound_stmt(v);
+}
+
+static Node *read_case_label(Token *tok){
+    if (!cases){
+        errort(tok , "stray case label");
+
+    }
+    char *label = make_label();
+    int beg = read_intexpr();
+    if (next_token(KELLIPSIS)){
+        int end = read_intexpr();
+        expect(':');
+        if (beg > end){
+            errort(tok, "case region is not in correct order: %d ... %d", beg, end);
+        }
+        vec_push(cases,make_case(beg, end, label));
+    }
+    else {
+        expect(':');
+        vec_push(cases,make_case(beg, beg, label));
+    }
+    check_case_duplicates(cases);
+    return read_label_tail(ast_dest(label));
+}
+
+static Node *read_default_label(Token *tok){
+    expect(';');
+    if (defaultcase){
+        errort(tok, "duplicate default");
+    }
+    defaultcase = make_label();
+    return read_label_tail(ast_dest(defaultcase));
+}
+
+// Jump statements
+
+static Node *read_break_stmt(Token *tok){
+    expect(';');
+    if (!lbreak){
+        errort(tok, "stray break statement");
+    }
+    return ast_jump(lbreak);
+}
+
+static Node *read_conditional_stmt(Token *tok){
+    expect(';');
+    if (!lcontinue){
+        errort(tok, "stray continue statement");
+    }
+    return ast_jump(lcontinue);
+}
+
+static Node *read_return_stmt(){
+    Node *retval = read_expr_opt();
+    expect(';');
+    if (retval){
+        return ast_return(ast_conv(current_func_type->rettype, retval));
+    }
+    return ast_return(NULL);
+}
+
+
+static Node *read_goto_stmt(){
+    if (next_token('*')){
+        Token *tok = read_case_expr();
+        Node *expr = read_cast_expr();
+        if (expr->ty->kind != KIND_PTR){
+            errort(tok, "pointer expected for computed goto , but got %s", node2s(expr));
+        }
+        return ast_computed_goto(expr);
+    }
+    Token *tok = get();
+    if (!tok || tok->kind != TIDENT){
+        errort(tok, "identifier expected, but got %s", tok2s(tok));
+    }
+    expect(';');
+    Node *r = ast_goto(tok->sval);
+    vec_push(gotos, r);
+    return r;
+}
+
+static Node *read_label(Token *tok){
+    char *label = tok->sval;
+    if (map_get(labels, label)){
+        errort(tok, "duplicate label: %s", tok2s(tok));
+    }
+    Node *r = ast_label(label);
+    map_put(labels, label, r);
+    return read_label_tail(r);
+}
+
+// statement
+
+static Node *read_stmt(){
+    Token *tok =get();
+    if (tok->kind == TKEYWORD){
+        switch(tok->id){
+            case '{': return read_compound_stmt();
+            case KIF:  return read_if_stmt();
+            case KFOR : return read_for_stmt();
+            case KWHILE : return read_while_stmt();
+            case KDO: return read_do_stmt();
+            case KRETURN: return read_return_stmt();
+            case KGOTO: return read_goto_stmt();
+            case KCONTINUE: return read_continue_stmt(tok);
+            case KBREAK: return read_break_stmt(tok);
+            case KDEFAULT: return read_default_stmt(tok);
+            case KCASE: return read_case_label(tok);
+            case KSWITCH: return read_switch_stmt();
+        }
+    }
+    if (tok->kind == TIDENT && next_token(':')){
+        return read_label(tok);
+    }
+    unget_token(tok);
+    Node *r = read_expr_opt();
+    expect(';');
+    return r;
+}
+
+static Node *read_compound_stmt(){
+    Map *orig = localenv;
+    localenv = make_map_parent(localenv);
+    Vector *list = make_vector();
+    for (;;){
+        if (next_token('}')){
+            break;
+        }
+        read_decl_or_stmt(list);
+    }
+    localenv = orig;
+    return ast_compound_stmt(list);
+}
+
+static void read_decl_or_stmt(Vector *list){
+    Token *tok = peek();
+    if (tok->kind == TEOF){
+        error("premature end of input");
+    }
+    mark_location();
+    if (is_type(tok)){
+        read_decl(list, false);
+    } else if (next_token(KSTATIC_ASSERT)){
+        read_static_assert();
+    }
+    else {
+        Node *stmt = read_stmt();
+        if (stmt){
+            vec_push(list, stmt);
+        }
+    }
+}
+
+
+// compilation unit
+
+Vector *read_toplevels(){
+    toplevels = make_vector();
+    for (;;){
+        if (peek()->kind == TEOF){
+            return toplevels;
+        }
+        if (is_funcdef()){
+            vec_push(toplevels, read_funcdef());
+        }
+        else {
+            read_decl(toplevels, true
+            );  
+        }
+    }
+}
+
+
+
+// token handling
+static void concatenate_string(Token *tok){
+    int enc = tok->enc;
+    Buffer *b = make_buffer();
+    buf_append(b, tok->sval, tok->sval-1);
+    while (peek()->kind ==TSTRING){
+        Token *tok2 = read_token();
+        buf_append(b, tok2->sval, tok2->slen -1);
+        int enc2 = tok2->enc;
+        if (enc != ENC_NONE && enc2 != ENC_NONE && enc != enc2){
+            errort(tok2, "unsupported non-standard concatenation of string literals : %s", tok2s(tok2));
+        }
+        if (enc== ENC_NONE){
+            enc = enc2;
+        }
+    }
+    buf_write(b, '\0');
+    tok->sval = buf_body(b);
+    tok->slen = buf_len(b);
+    tok->enc = enc;
+    
+}
+
+static Token *get(){
+    Token *r = read_token();
+    if (r->kind == TINVALID){
+        errort(r, "stray character in program: '%c' ",r->c);
+    }
+    if (r->kind == TSTRING && peek()->kind == TSTRING){
+        concatenate_string(r);
+    }
+    return r;
+}
+
+static Token *peek(){
+    return peek_token();
+}
+
+
+static void define_builtin(char *name, Type *rettype, Vector *paramtypes){
+    ast_gvar(make_func_type(rettype, paramtypes, true, false), name);
+}
+
+void parse_init(){
+    Vector *voidptr = make_vector1(make_ptr_type(type_void));
+    Vector *two_voidptrs = make_vector();
+    vec_push(two_voidptrs, make_ptr_type(type_void));
+    vec_push(two_voidptrs, make_ptr_type(type_void));
+    define_builtin("__builtin_return_address", make_ptr_type(type_void),voidptr);
+    define_builtin("__builtin_reg_class", type_int, voidptr);
+    define_builtin("__builtin_va_arg", type_void, two_voidptrs);
+    define_builtin("__builtint_va_start", type_void, voidptr);
+}
+
+
+
+
+
 
 
 
