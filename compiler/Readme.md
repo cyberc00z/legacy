@@ -1,4 +1,3 @@
 ### Write a Compiler in C
 
-
-**Compiler is on road  **
+### Compiler is on road  
