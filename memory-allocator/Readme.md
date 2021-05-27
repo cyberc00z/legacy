@@ -1,3 +1,3 @@
-##Memory Allocation
+###Memory Allocation
 
-**Slab Memory Allocator written in C++**
+###Slab Memory Allocator written in C++
