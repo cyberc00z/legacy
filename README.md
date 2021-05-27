@@ -37,6 +37,9 @@
 
 16. Write a C compiler (https://github.com/xadhrit/legacy/tree/main/compiler)
 
+17. Write a Memory Allocator (https://github.com/xadhrit/legacy/tree/main/memory-allocator)
+
+
 
 ### Python Programs
 
