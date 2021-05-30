@@ -925,8 +925,131 @@ static void handle_timestamp_macro(Token *tmpl){
    make_token_pushback(tmpl, TSTRING, strdup(buf));
 }
 
-/// macros
+static void handle_file_macro(Token *tmpl){
+    make_token_pushback(tmpl, TSTRING,tmpl->file->name); 
+}
 
+static void handle_line_macro(Token *tmpl){
+    make_token_pushback(tmpl, TNUMBER, format("%d", tmpl->file->line));
+}
+
+static void handle_pragma_macro(Token *tmpl){
+    expect('(');
+    Token *operand = read_token();
+    if (operand->kind != TSTRING){
+        errort(operand, "_Pragma takes a string literal, but got %s", tok2s(operand));
+    }
+    expect(')');
+    parse_pragma_operand(operand);
+    make_token_pushback(tmpl, TNUMBER, "1");
+}
+
+static void handle_base_file_macro(Token *tmpl){
+    make_token_pushback(tmpl, TSTRING, get_base_file());
+}
+
+static void handle_counter_macro(Token *tmpl){
+    static int counter = 0;
+    make_token_pushback(tmpl, TNUMBER, format("%d", counter++));
+}
+
+static void handle_include_level_macro(Token *tmpl){
+    make_token_pushback(tmpl, TNUMBER, format("%d", stream_depth() -1 ));
+}
+
+// initializer
+void add_include_path(char *path){
+    vec_push(std_include_path, path);
+}
+
+static void define_obj_macro(char *name, Token *value){
+    map_put(macros,name, make_obj_macro(make_vector1(value)));
+}
+
+static void define_special_macro(char *name, SpecialMacroHandler *fn){
+#define op(id, str)   map_put(keywords, str, (void *)id);
+#define keyword(id, str, _) map_put(keywords, str, (void *)id);
+#include "keyword.inc"
+#undef keyword
+#undef op
+}
+
+static void init_predefined_macros(){
+    vec_push(std_include_path, BUILD_DIR "/include");
+    vec_push(std_include_path, "/usr/local/lib/compiler/include");
+     vec_push(std_include_path, "/usr/local/include");
+    vec_push(std_include_path, "/usr/include");
+    vec_push(std_include_path, "/usr/include/linux");
+    vec_push(std_include_path, "/usr/include/x86_64-linux-gnu");
+     define_special_macro("__DATE__", handle_date_macro);
+    define_special_macro("__TIME__", handle_time_macro);
+    define_special_macro("__FILE__", handle_file_macro);
+    define_special_macro("__LINE__", handle_line_macro);
+    define_special_macro("_Pragma",  handle_pragma_macro);
+    // [GNU] Non-standard macros
+    define_special_macro("__BASE_FILE__", handle_base_file_macro);
+    define_special_macro("__COUNTER__", handle_counter_macro);
+    define_special_macro("__INCLUDE_LEVEL__", handle_include_level_macro);
+    define_special_macro("__TIMESTAMP__", handle_timestamp_macro);
+
+    read_from_string("#include <" BUILD_DIR "/include/compiler.h>");
+}
+
+void init_now(){
+    time_t timet = time(NULL);
+    localtime_r(&timet, &now);
+}
+
+void cpp_init(){
+    setlocale(LC_ALL, "C");
+    init_keywords();
+    init_now();
+    init_predefined_macros();
+}
+
+/*interfaces*/
+
+static Token *maybe_convert_keyword(Token *tok){
+    if (tok->kind != TIDENT){
+        return tok;
+    }
+    int id = (intptr_t)map_get(keywords, tok->sval);
+    if (!id){
+        return tok;
+    }
+    Token *r = copy_token(tok);
+    r->kind = TKEYWORD;
+    r->id = id;
+    return r;
+}
+
+void read_from_string(char *buf){
+    stream_stash(make_file_string(buf));
+    Vector *tolevels = read_toplevels();
+    for (int i=0; i< vec_len(toplevels); i++){
+        emit_toplevel(vec_get(toplevels,i));
+    }
+    stream_unstash();
+}
+
+Token *peek_token(){
+    Token *r = read_token();
+    unget_token(r);
+    return r;
+}
+
+Token *read_token(){
+    Token *tok;
+    for (;;){
+        tok = read_expand();
+        if (tok->bol && is_keyword(tok, "#") &&tok->hideset == NULL){
+            read_directive(tok);
+            continue;
+        }
+        assert(tok->kind < MIN_CPP_TOKEN);
+        return maybe_convert_keyword(tok);
+    }
+}
 
 
 
