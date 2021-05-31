@@ -1,8 +1,12 @@
-###  C Programs
+###  Legacy
 
 <p align="center">
 <img src="./virus/c.jpg" height="280px" width="400"  alt="C" />
 </p>
+
+
+**C programmes**
+
 
 1. Billing System (https://github.com/xadhrit/legacy/tree/main/bank)
 
@@ -39,13 +43,19 @@
 
 17. Write a Memory Allocator (https://github.com/xadhrit/legacy/tree/main/memory-allocator)
 
-18. Configurations and Automation (https://github.com/xadhrit/legacy/tree/main/config)
 
 
-### Python Programs
+ **Python Programs**
 
 1. IP lookup (https://github.com/xadhrit/8IP)
 
 2. Pdf and Text File Translator (https://github.com/xadhrit/trans)
 
 3. Keylogger (https://github.com/xadhrit/legacy/tree/main/pyloger)
+
+
+**Misc**
+
+1. Configurations and Automation (https://github.com/xadhrit/legacy/tree/main/config)
+
+
