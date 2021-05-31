@@ -1,8 +1,10 @@
 ### Configurations
 
-*This folder content all the scripts i used on daily basis*
 
- **My Vim Configuration**
- <br />
- : (https://github.com/xadhrit/legacy/config/)
+*This folder contains many useful things for your daily usage*
+
+<br />
+
+
+<a href="https://github.com/xadhrit/legacy/tree/main/config/vimconfig">Vim Configuations</a>
 
