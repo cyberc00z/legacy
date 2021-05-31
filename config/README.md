@@ -26,6 +26,8 @@ $ mv update.sh adhrit
  
 $ sudo mv adhrit /usr/bin/
 
+$ chmod a+x /usr/bin/adhrit
+
 $ sudo reboot
 
 ```
