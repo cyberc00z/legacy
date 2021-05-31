@@ -18,7 +18,7 @@
 After cloning repo in your home directory or any where.
 
 
-run commnads :
+Run the following Commnads :
 
 ```
 $ bash update.sh
