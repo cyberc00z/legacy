@@ -5,6 +5,30 @@
 
 <br />
 
+**Vim Configurations**
 
-<a href="https://github.com/xadhrit/legacy/tree/main/config/vimconfig">Vim Configuations</a>
+<a href="https://github.com/xadhrit/legacy/blob/main/config/.vimrc">Vim Configuations</a>
+
+<br/>
+
+**Automate Update and Upgrading**
+
+<a href="https://github.com/xadhrit/legacy/blob/main/config/update.sh">Update && Upgrade</a>
+
+After cloning repo in your home directory or any where.
+
+
+run commnads :
+
+```
+$ bash update.sh
+ 
+   or
+
+$ chmod +x update.sh
+
+$ ./update.sh
+
+```
+
 
