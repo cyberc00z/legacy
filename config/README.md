@@ -17,17 +17,23 @@
 
 After cloning repo in your home directory or any where.
 
+For calling these command from any where , we need to simply add update.sh file to /usr/bin/ folder. So it will be added in bin Path. 
 
 Run the following Commnads :
 
 ```
-$ bash update.sh
+$ mv update.sh adhrit
  
-   or
+$ sudo mv adhrit /usr/bin/
 
-$ chmod +x update.sh
+$ sudo reboot
 
-$ ./update.sh
+```
+
+After rebooting your machine 
+
+```
+$ adhrit
 
 ```
 
