@@ -39,6 +39,7 @@
 
 17. Write a Memory Allocator (https://github.com/xadhrit/legacy/tree/main/memory-allocator)
 
+18. Configurations and Automation (https://github.com/xadhrit/legacy/tree/main/config)
 
 
 ### Python Programs
