@@ -1,0 +1,23 @@
+#! /usr/bin/env bash
+#automating git commands
+
+CYAN="\e[36m"
+GREEN="\e[32m"
+ENDCOLOR="\e[0m"
+
+echo -e "${CYAN}running git commands"
+
+
+cmd()
+{
+   git status
+   git add .
+   echo -e "${GREEN} Please Write commit message : "
+   read commit
+   git commit -m ${commit}
+   git push
+}
+
+cmd
+
+
