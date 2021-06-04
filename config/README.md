@@ -1,6 +1,5 @@
 ### Configurations
 
-
 *This folder contains many useful things for your daily usage*
 
 <br />
@@ -38,5 +37,9 @@ After rebooting your machine
 $ adhrit
 
 ```
+
+**Git Automation**
+
+<a href="https://github.com/xadhrit/legacy/blob/main/config/grit">git automation command</a>
 
 
