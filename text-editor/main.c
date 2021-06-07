@@ -67,9 +67,9 @@ void abFree(struct appendBuffer *ab){
 
 /******* defines   ********/
 #define CTRL_KEY(k) ((k) & 0x1f)
-#define KILO_TAB_STOP 8
-#define KILO_VERSION "0.0.1"
-#define KILO_QUIT_TIMES 1
+#define LOL_TAB_STOP 8
+#define LOL_VERSION "0.0.1"
+#define LOL_QUIT_TIMES 1
 
 enum editorKey {
    BACKSPACE=127,
@@ -292,7 +292,7 @@ int editorRowCxToRx(erow *row , int cursorX){
   int j;
   for (j=0; j < cursorX; j++){
     if (row->chars[j] == '\t'){
-       renderX += (KILO_TAB_STOP -1) - (renderX % KILO_TAB_STOP);
+       renderX += (LOL_TAB_STOP -1) - (renderX % LOL_TAB_STOP);
     }
     renderX++;
   }
@@ -303,7 +303,7 @@ int editorRowRxToCx(erow *row, int renderX){
     int cursorX;
     for (cursorX = 0; cursorX < row->size; cursorX++){
        if (row->chars[cursorX] == '\t'){
-          cur_rx = (KILO_TAB_STOP -1) - (cur_rx % KILO_TAB_STOP);
+          cur_rx = (LOL_TAB_STOP -1) - (cur_rx % LOL_TAB_STOP);
        }
        cur_rx++;
 
@@ -319,13 +319,13 @@ void editorUpdateRow(erow *row){
       if (row->chars[j] == '\t') tabs++;
    }
    free(row->render);
-   row->render = malloc(row->size + tabs*(KILO_TAB_STOP - 1) + 1);
+   row->render = malloc(row->size + tabs*(LOL_TAB_STOP - 1) + 1);
    
    int idx=  0;
    for (j=0; j<row->size; j++){
       if (row->chars[j] == '\t'){
          row->render[idx++] = ' ';
-         while (idx % KILO_TAB_STOP != 0) row->render[idx++] = ' ';
+         while (idx % LOL_TAB_STOP != 0) row->render[idx++] = ' ';
       }
       else {
          row->render[idx++] = row->chars[j];
@@ -636,7 +636,7 @@ void editorDrawRows(struct appendBuffer *ab){
      if (filerow >= E.numrows){
       if (E.numrows == 0 &&  y == E.screenrows / 3){
         char welcome[80];
-        int welcomelen = snprintf(welcome, sizeof(welcome),"lol editor -- version %s", KILO_VERSION);
+        int welcomelen = snprintf(welcome, sizeof(welcome),"lol editor -- version %s", LOL_VERSION);
         if (welcomelen > E.screencols){
            welcomelen = E.screencols;
         }
@@ -800,7 +800,7 @@ void editorMoveCursor( int key){
 }
 
 void editorProcessKeypress(){
-   static int quit_times = KILO_QUIT_TIMES;
+   static int quit_times =LOL_QUIT_TIMES;
 
    int c = editorReadKey();
    switch(c){
@@ -874,7 +874,7 @@ void editorProcessKeypress(){
          editorInsertChar(c);
          break;
    }
-   quit_times = KILO_QUIT_TIMES;
+   quit_times = LOL_QUIT_TIMES;
 }
 
 /**** driver code  ****/
