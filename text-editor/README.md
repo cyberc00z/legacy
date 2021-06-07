@@ -1,4 +1,4 @@
-*KILO TEXT-EDITOR written with Blog Guide*
+*LOL TEXT-EDITOR written with Blog Guide*
 
 * Not supporting Syntax highlight 
 * Hightlights numbers
