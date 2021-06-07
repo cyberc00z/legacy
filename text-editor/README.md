@@ -3,6 +3,17 @@
 * Not supporting Syntax highlight 
 * Hightlights numbers
 * Incremental Search for File Name
-* ok ok learning
+* 50% learning
+
+compile main.c file
+
+```
+$ gcc main.c -o main
+
+```
+
+running the lol editor
+
+$ ./lol
 
 
