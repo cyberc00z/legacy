@@ -467,12 +467,8 @@ void editorOpen(char *filename){
     E.filename = strdup(filename);
     editorSelectSyntaxHightlight(); 
     FILE *fp = fopen(filename, "r");
-    if (!fp) {
-       FILE *fp = fopen(filename, "w");
-    }
-    else {
-      die("fopen");
-    }
+    if (!fp) die("fopen");
+
     char *line = NULL;
     size_t linecap = 0;
     ssize_t linelen;
