@@ -33,6 +33,7 @@ struct editorConfig {
   int screenrows;
   int screencols;
   int numrows;
+  int charnums;
   erow *row;
   int dirty;
   char *filename;
@@ -339,7 +340,7 @@ void editorUpdateRow(erow *row){
 
 void editorInsertRow(int at,char *s, size_t len){
    if (at < 0 || at > E.numrows) return;
-   
+       
    E.row = realloc(E.row, sizeof(erow) * (E.numrows + 1));
    memmove(&E.row[at+1],&E.row[at],sizeof(erow) *(E.numrows - at ));
    E.row[at].size = len;
@@ -377,6 +378,7 @@ void editorRowInsertChar(erow *row, int at, int c){
    row->size++;
    row->chars[at] = c;
    editorUpdateRow(row);
+   
    E.dirty++;
 }
 
@@ -465,8 +467,12 @@ void editorOpen(char *filename){
     E.filename = strdup(filename);
     editorSelectSyntaxHightlight(); 
     FILE *fp = fopen(filename, "r");
-    if (!fp) die("fopen");
-
+    if (!fp) {
+       FILE *fp = fopen(filename, "w");
+    }
+    else {
+      die("fopen");
+    }
     char *line = NULL;
     size_t linecap = 0;
     ssize_t linelen;
@@ -601,7 +607,7 @@ void editorScroll(){
 }
 
 void editorDrawStatusBar(struct appendBuffer *ab){
-    abAppend(ab, "\x1b[7m",4);
+    /*abAppend(ab, "\x1b[7m",4);
     char status[80], rstatus[80];
     int len = snprintf(status, sizeof(status), "%.20s - %d lines", E.filename ? E.filename: "[No Name]", E.numrows, E.dirty ? "(modified)" : "");
     int rlen = snprintf(rstatus, sizeof(rstatus), "%d%d", E.syntax ? E.syntax->filetype  : "no ft",E.cursorY + 1, E.numrows);
@@ -617,7 +623,14 @@ void editorDrawStatusBar(struct appendBuffer *ab){
        }
     }
     abAppend(ab, "\x1b[m", 3);
-    abAppend(ab, "\r\n", 2);
+    abAppend(ab, "\r\n", 2);*/
+    abAppend(ab, "\x1b[m",4);
+    char status[80], rstaus[80];
+    int len = snprintf(status, sizeof(status), "%.20s - %d lines, %dC", E.filename ? E.filename: "[No Name]", E.numrows,E.charnums , E.dirty ? "(modified)" : "");
+    if (len > E.screencols) len = E.screencols;
+    abAppend(ab, status, len);
+    abAppend(ab,"\x1b[m",3);
+    abAppend(ab, "\r\n", 2); 
 }
 
 
@@ -692,9 +705,7 @@ void editorRefreshScreen(){
    editorScroll();
    struct appendBuffer ab = ABUF_INIT;
    
-
-   abAppend(&ab, "\x1b[?25l",6);
-   //abAppend(&ab,"\x1b[2J",4);
+   abAppend(&ab,"\x1b[2J",4);
    abAppend(&ab, "\x1b[H", 3);
   
    editorDrawRows(&ab);
@@ -706,8 +717,6 @@ void editorRefreshScreen(){
    
    abAppend(&ab,buf,strlen(buf));
    
-   abAppend(&ab, "x\1b[?25h",6);
-
    write(STDOUT_FILENO, ab.b, ab.len);
    abFree(&ab);
 }
@@ -809,12 +818,13 @@ void editorProcessKeypress(){
         break;
 
      case CTRL_KEY('q'):
+        write(STDOUT_FILENO, "\x1b[2J", 4);
         if (E.dirty && quit_times > 0){
            editorSetStatusMessage("WARNING!!! File has unsaved changes. Press Ctrl - Q %d more times to quit.", quit_times);
            quit_times--;   
            return;
         }
-        write(STDOUT_FILENO, "\x1b[2J", 4);
+        /*write(STDOUT_FILENO, "\x1b[2J", 4);*/
         write(STDOUT_FILENO, "\x1b[H", 3);
         exit(0);
         break;
