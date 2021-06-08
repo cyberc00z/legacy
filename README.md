@@ -43,7 +43,7 @@
 
 17. Write a Memory Allocator (https://github.com/xadhrit/legacy/tree/main/memory-allocator)
 
-
+18. Write a Text Editor (https://github.com/xadhrit/legacy/tree/main/text-editor)
 
  **Python Programs**
 
