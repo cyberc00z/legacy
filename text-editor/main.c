@@ -16,7 +16,6 @@
 #include <fcntl.h>
 
 /*******  data  **********/
-
 typedef struct erow {
    int size;
    int rsize;
@@ -463,11 +462,13 @@ char *editorRowsToString(int *buflen){
 }
 
 void editorOpen(char *filename){
+    
     free(E.filename);
     E.filename = strdup(filename);
     editorSelectSyntaxHightlight(); 
-    FILE *fp = fopen(filename, "r");
-    if (!fp) die("fopen");
+    
+    FILE *fp = fopen(filename, "w+");
+    /** creating file opening like vim **/
 
     char *line = NULL;
     size_t linecap = 0;
