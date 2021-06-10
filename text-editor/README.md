@@ -14,6 +14,10 @@ $ gcc main.c -o main
 
 running the lol editor
 
-$ ./lol
+```bash
+$ ./main <filename>
 
+or 
+$ ./main
+```
 
