@@ -468,8 +468,6 @@ void editorOpen(char *filename){
     editorSelectSyntaxHightlight(); 
     
     FILE *fp = fopen(filename, "w+");
-    /** creating file opening like vim **/
-
     char *line = NULL;
     size_t linecap = 0;
     ssize_t linelen;
