@@ -466,19 +466,34 @@ void editorOpen(char *filename){
     free(E.filename);
     E.filename = strdup(filename);
     editorSelectSyntaxHightlight(); 
-    
-    FILE *fp = fopen(filename, "w+");
-    char *line = NULL;
-    size_t linecap = 0;
-    ssize_t linelen;
-    while ((linelen = getline(&line, &linecap, fp)) != -1){
-       while (linelen > 0 && (line[linelen - 1] == '\n' || line[linelen -1] == '\r' ))
-         linelen--;
+    FILE *fp;
+    if (!fp){    
+       fopen(filename, "w+");
+       char *line = NULL;
+       size_t linecap = 0;
+       ssize_t linelen;
+       while ((linelen = getline(&line, &linecap, fp)) != -1){
+            while (linelen > 0 && (line[linelen - 1] == '\n' || line[linelen -1] == '\r' ))
+            linelen--;
 
-       editorInsertRow(E.numrows,line, linelen);
+            editorInsertRow(E.numrows,line, linelen);
+       }
+       free(line);
+       fclose(fp);
     }
-    free(line);
-    fclose(fp);
+    else{
+       fopen(filename, "r");
+       char *line = NULL;
+       size_t linecap = 0;
+       ssize_t linelen;
+       while ((linelen = getline(&line, &linecap, fp))!= -1){
+            while (linelen>0 && (line[linelen - 1] == '\n' || line[linelen -1] == '\r'))
+            linelen--;
+            editorInsertRow(E.numrows, line, linelen);
+       }
+       free(line);
+       fclose(fp);
+    }
     E.dirty = 0;
 }
 
