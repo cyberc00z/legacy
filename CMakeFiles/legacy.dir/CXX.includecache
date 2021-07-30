@@ -1,0 +1,36 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/godhead/Desktop/legacy/memory-allocator/alloc.cc
+stdio.h
+-
+string
+-
+
+/home/godhead/Desktop/legacy/tele++/main.cpp
+iostream
+-
+fstream
+-
+cstdlib
+-
+graphics.h
+-
+string.h
+-
+stdlib.h
+-
+conio.h
+-
+stdio.h
+-
+iomanip.h
+-
+dos.h
+-
+
