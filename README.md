@@ -45,13 +45,19 @@
 
 18. Write a Text Editor (https://github.com/xadhrit/legacy/tree/main/text-editor)
 
- **Python Programs**
+**(C++**
+
+1. Some ++ are representing C++
+
+
+**Python Programs**
 
 1. IP lookup (https://github.com/xadhrit/8IP)
 
 2. Pdf and Text File Translator (https://github.com/xadhrit/trans)
 
 3. Keylogger (https://github.com/xadhrit/legacy/tree/main/pyloger)
+
 
 
 **Misc**
