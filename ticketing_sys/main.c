@@ -160,7 +160,7 @@ void seatNo(){
 	for (i=0;i<count ; i++){
 	  int seat = (rand() % (berth - seath + 2));
 	  int voggy = (rand() % (train*122 - 34));
-
+gith
 	  printf("%sYour got seat no %d in Vogage no %d", KWHT,seat, voggy);
 	  break;
 	}
@@ -255,10 +255,3 @@ int main(){
 	mainmenu();
 	return 0;
 }
-
-
-
-
-
-
-

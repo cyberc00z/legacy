@@ -1,5 +1,5 @@
-bits 16 ; 16 bit mode
-org 0x7c00  ;get output at offset 0x7c00
+[bits 16] ; 16 bit mode
+[org 0x7c00]  ;get output at offset 0x7c00
 
 boot:
    mov si, hello  ;point si register to hello label memory location
@@ -19,4 +19,4 @@ halt:
 hello: db "First Write a Simple Bootloader!",0
 
 times 510 - ($-$$) db 0 ; pad remiaing 510 bytes with zeros
-dw 0xaa55 ;mark this 512 bytes sector
+ddw 0xaa55 ;mark this 512 bytes sector

@@ -279,9 +279,4 @@ int main(){
 	printf("P%d", ans[n-1]);
 
 
-	return 0;
-
-
-
-    
-}
+	return 0;}

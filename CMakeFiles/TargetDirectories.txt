@@ -1,3 +1,0 @@
-/home/godhead/Desktop/legacy/CMakeFiles/rebuild_cache.dir
-/home/godhead/Desktop/legacy/CMakeFiles/legacy.dir
-/home/godhead/Desktop/legacy/CMakeFiles/edit_cache.dir
