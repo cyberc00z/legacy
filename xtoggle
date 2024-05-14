@@ -1,0 +1,18 @@
+#!/bin/bash
+
+ProcessID="${xwininfo -wm | grep -o 'Process id: [0-9]*' | grep -o '[0-9]*'}" 
+if [[$ProcessID == ""]]; then
+      echo "Error : Window has no PID hint"
+      exit 1
+fi
+
+ProcessState="$(ps -o state $ProcessID | sed 1d)"
+
+if [[$ProcessState == "T"]]; then
+      kill -s CONT $ProcessID
+      echo "Process continued"
+
+elif [[ $ProcessState == "S" ]]; then
+      kill -s STOP $ProcessID
+      echo "Process stopped"
+fi
