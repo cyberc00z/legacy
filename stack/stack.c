@@ -1,118 +1,79 @@
-/*                                    Stack Data Structure
- *
- *   Linear Data Structure
- *   LAST IN FIRST OUT (LIFO)   or FIRST IN LAST OUT  (FILO) 
- *   push()                          
- *   pop()
- *
- *   peek() ---> get the top of data element of stack, without removing it
- *   isFull() --> check if stack is full
- *   isEmpty()  --> check if stack is empty
- *
- */
-
+// Linear Data Structure
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
+#include <stdbool.h>
 #define MAXSIZE 10
 
-struct stack{
-   
-        int stk[MAXSIZE];	
-	int top;
-
-	
-} s;
-
-
-
+struct Stack {
+    int data[MAXSIZE];
+    int top;
+}stk;
 
 void push();
 int pop();
 void display();
 int num;
+
+
 int main(){
-              
-       printf("             Welcome to Stack operation in C\n");
-       printf("1 --> PUSH \n");
-       printf("2 --> POP \n");
-       printf("3 --> DISPLAY\n");
-       printf("4 --> EXIT\n");
+    stk.top = -1;
+    printf("Enter the number of elements that you want to insert \n");
+    printf("1 --> PUSH \n");
+    printf("2 --> POP \n");
+    printf("3 --> DISPLAY \n");
+    printf("4 --> EXIT \n");
 
-       s.top = -1;
-
-       printf("Enter your choice \n");
-       int ch;
-       scanf("%d", &ch);
-       system("clear");
-       
-
-       switch (ch){
-          case '1':
-		  push();
-	  break;
-	  case '2':
-	          pop();
-	  break;
-	  case '3':
-	         display();
+    int ch; 
+    scanf("%d", &ch);
+    switch (ch) {
+        case 1: push();
+        case 2: pop();
+        case 3: display();
+        case 4:
+          printf("Exiting....");
+          exit(0);
           break; 
-
-       }
-       return 0;
- 
+    }
+    
 }
 
 void push(){
-   
-   if (s.top == (MAXSIZE - 1))
-   {
-      printf("Stack is full\n");
-      return;
-   }
-   else 
-   {
-      printf("Enter the element to be pushed\n");
-      scanf("%d", &num);
-      s.top = s.top+1;
-      s.stk[s.top] = num;
-   }
+    if (stk.top == (MAXSIZE - 1))
+    {
+       printf("Stack is full \n"); 
+    }
+    else {
+        stk.top++;
+        printf("Enter the element to be inserted \n");
+        scanf("%d",  &num);
+        stk.data[stk.top] = num;
+    }
+} 
 
+int pop (){
+    if (stk.top == -1) {
+        printf("Stack is empty"); 
+        return -1;
+    }
+    else {
+        
+        printf("Popped element is =%d\n", stk.data[stk.top]);
+        stk.top--;
+        return stk.data[stk.top];
+    }
 }
-
-int pop(){
-     
-     if (s.top == -1){
-        printf("Stack is Empty\n");
-	return (s.top);
-     }
-     else {
-        num = s.stk[s.top];
-	printf("poped element is = %d\n", s.stk[s.top]);
-	s.top  = s.top -1;
-     }
-     return (num);
-   
-}
-
 
 void display(){
-  int i;
- 
-  if (s.top == -1){
-     printf("Stack is Empty!\n");
-     return;
-  }
-  else {
-     printf("\n The status of the stack is\n");
-     for (i=s.top;i>=0;i--)
-     {
-        printf("%d\n", s.stk[i]);
-     }
-  }
-  printf("\n");
+    int i;
+    if (stk.top == -1){
+        printf("Stack is empty");
+        return;
+    } else {
+        printf("\n The status of the stack \n"); 
+        for (int i=stk.top; i>=0; i--){
+            printf("%d", stk.data[i]);
+        }
+    }
+    printf("\n");
 }
-
-
-
